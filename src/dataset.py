@@ -1,3 +1,6 @@
+import json
+import os.path
+
 import tensorflow as tf
 from datasets import load_dataset
 from keras.layers import TextVectorization
@@ -29,19 +32,35 @@ class WikitextDataset:
         logger.info("tensorflow dataset batched")
 
         if mode == "train":
-            self.vectorize_layer = TextVectorization(
-                standardize="lower_and_strip_punctuation",
-                max_tokens=vocab_size - 1,
-                output_mode="int",
-                output_sequence_length=maxlen + 1,
-            )
-            logger.info("vectorize_layer created")
+            if not os.path.exists("vocab.json"):
+                self.vectorize_layer = TextVectorization(
+                    standardize="lower_and_strip_punctuation",
+                    max_tokens=vocab_size - 1,
+                    output_mode="int",
+                    output_sequence_length=maxlen + 1,
+                )
+                logger.info("vectorize_layer created")
 
-            self.vectorize_layer.adapt(self.dataset)
-            logger.info("vectorize_layer adapted")
+                self.vectorize_layer.adapt(self.dataset)
+                logger.info("vectorize_layer adapted")
 
-            self.vocab = self.vectorize_layer.get_vocabulary()
-            logger.info("vectorize_layer got vocab")
+                self.vocab = self.vectorize_layer.get_vocabulary()
+                logger.info("vectorize_layer got vocab")
+
+                with open("vocab.json", 'w') as vocab_file:
+                    json.dump(self.vocab, vocab_file)
+
+            else:
+                with open("vocab.json") as vocab_file:
+                    self.vocab = json.load(vocab_file)
+                self.vectorize_layer = TextVectorization(
+                    standardize="lower_and_strip_punctuation",
+                    max_tokens=vocab_size - 1,
+                    output_mode="int",
+                    output_sequence_length=maxlen + 1,
+                    vocabulary=self.vocab,
+                )
+                logger.info("vocab loaded")
 
         elif mode == "test":
             if vocabulary is None:

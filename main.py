@@ -1,11 +1,9 @@
-import wandb
 import tensorflow as tf
 
 from src.models.gpt import create_model
 from src.dataset import WikitextDataset
 from src.text_generator import TextGenerator
-from src.callbacks import WandbCustomCallback, TextGeneratorCallback
-from src.metrics import BLEUCallback
+from src.callbacks import MetricAndStatisticCallback, TextGeneratorCallback
 
 
 if __name__ == '__main__':
@@ -20,15 +18,13 @@ if __name__ == '__main__':
     )
     model.summary()
 
-    wandb.init(project="articles_text_generator", entity="yevpan")
-    wandb_callback = WandbCustomCallback()
-
+    wandb_callback = MetricAndStatisticCallback(train_ds, test_ds, use_wandb=True)
     text_generator = TextGenerator(train_ds, "After creating his last")
     text_generator_callback = TextGeneratorCallback(text_generator)
-
-    bleu_callback = BLEUCallback(train_ds, test_ds)
 
     model.fit(train_ds.get_dataset(),
               epochs=25,
               validation_data=test_ds.get_dataset(),
-              callbacks=[bleu_callback, wandb_callback])
+              callbacks=[wandb_callback])
+
+    print(text_generator.generate_text(model))

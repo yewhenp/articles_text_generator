@@ -1,6 +1,18 @@
-vocab_size = 40000  # Only consider the top 100k words
-maxlen = 80  # Max sequence size
-embed_dim = 512  # Embedding size for each token
-num_heads = 2  # Number of attention heads
-feed_forward_dim = 256  # Hidden layer size in feed forward network inside transformer
-batch_size = 128  # Size of batch
+class ConfigKeys:
+    # General parameters
+    EPOCHS = "epochs"
+    BATCH_SIZE = "batch_size"
+    VOCAB_SIZE = "vocab_size"
+    MAX_SEQUENCE_LEN = "max_sequence_len"
+
+    # Model general
+    MODEL = "model"
+    MODEL_TYPE = "type"
+    MODEL_CONFIG = "config"
+
+    # Model-related
+
+    # GPT
+    EMBED_DIM = "embed_dim"
+    NUM_HEAD = "num_heads"
+    FEED_FORWARD_DIM = "feed_forward_dim"

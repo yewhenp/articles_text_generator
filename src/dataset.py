@@ -7,27 +7,27 @@ from keras.layers import TextVectorization
 
 try:
     from .logs import logger
-    from .constants import *
+    from .constants import ConfigKeys as ck
 except ImportError:
     from logs import logger
-    from constants import *
+    from constants import ConfigKeys as ck
 
 
 class WikitextDataset:
-    def __init__(self, mode="train", vocabulary=None):
+    def __init__(self, config, mode="train", vocabulary=None):
         self.dataset = load_dataset("wikitext", "wikitext-103-raw-v1", split=mode).to_pandas()
         self.dataset["length"] = self.dataset["text"].apply(lambda x: len(x))
         self.dataset = self.dataset[self.dataset["length"] > 2]
         self.dataset = self.dataset[self.dataset["text"].str.startswith(" =") == False]
         self.dataset = self.dataset.drop(["length"], axis=1)
 
-        self.dataset = tf.convert_to_tensor(self.dataset["text"])
+        self.dataset = tf.convert_to_tensor(self.dataset["text"][:100])
         self.dataset = tf.data.Dataset.from_tensor_slices(self.dataset)
         logger.info("tensorflow dataset generated")
 
         if mode == "train":
             self.dataset = self.dataset.shuffle(buffer_size=256)
-        self.dataset = self.dataset.batch(batch_size)
+        self.dataset = self.dataset.batch(config[ck.BATCH_SIZE])
 
         logger.info("tensorflow dataset batched")
 
@@ -35,9 +35,9 @@ class WikitextDataset:
             if not os.path.exists("vocab.json"):
                 self.vectorize_layer = TextVectorization(
                     standardize="lower_and_strip_punctuation",
-                    max_tokens=vocab_size - 1,
+                    max_tokens=config[ck.VOCAB_SIZE] - 1,
                     output_mode="int",
-                    output_sequence_length=maxlen + 1,
+                    output_sequence_length=config[ck.MAX_SEQUENCE_LEN] + 1,
                 )
                 logger.info("vectorize_layer created")
 
@@ -55,9 +55,9 @@ class WikitextDataset:
                     self.vocab = json.load(vocab_file)
                 self.vectorize_layer = TextVectorization(
                     standardize="lower_and_strip_punctuation",
-                    max_tokens=vocab_size - 1,
+                    max_tokens=config[ck.VOCAB_SIZE] - 1,
                     output_mode="int",
-                    output_sequence_length=maxlen + 1,
+                    output_sequence_length=config[ck.MAX_SEQUENCE_LEN] + 1,
                     vocabulary=self.vocab,
                 )
                 logger.info("vocab loaded")
@@ -68,9 +68,9 @@ class WikitextDataset:
 
             self.vectorize_layer = TextVectorization(
                 standardize="lower_and_strip_punctuation",
-                max_tokens=vocab_size - 1,
+                max_tokens=config[ck.VOCAB_SIZE] - 1,
                 output_mode="int",
-                output_sequence_length=maxlen + 1,
+                output_sequence_length=config[ck.MAX_SEQUENCE_LEN] + 1,
                 vocabulary=vocabulary
             )
             logger.info("vectorize_layer created")
@@ -99,8 +99,3 @@ class WikitextDataset:
 
     def get_vocab(self):
         return self.vocab
-
-
-if __name__ == '__main__':
-    ds = WikitextDataset()
-    print(next(iter(ds.get_dataset())))

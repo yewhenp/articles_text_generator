@@ -7,18 +7,16 @@ from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu
 
 try:
     from .utils import sample_from_batch
-    from .constants import *
     from .text_generator import TextGenerator
     from .dataset import WikitextDataset
 except ImportError:
     from utils import sample_from_batch
-    from constants import *
     from text_generator import TextGenerator
     from dataset import WikitextDataset
 
 
 class MetricAndStatisticCallback(tf.keras.callbacks.Callback):
-    def __init__(self, train_ds, test_ds, use_wandb=False, all_weights_dir="weights", save_each=5):
+    def __init__(self, config, train_ds, test_ds, use_wandb=False, all_weights_dir="weights", save_each=5):
         super().__init__()
         self.train_ds: WikitextDataset = train_ds
         self.test_ds: WikitextDataset = test_ds
@@ -29,7 +27,7 @@ class MetricAndStatisticCallback(tf.keras.callbacks.Callback):
         self.best_val_loss = np.inf
 
         if self.use_wandb:
-            wandb.init(project="articles_text_generator", entity="yevpan")
+            wandb.init(project="articles_text_generator", entity="yevpan", config=config)
 
         if not os.path.exists(all_weights_dir):
             os.mkdir(all_weights_dir)

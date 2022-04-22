@@ -3,15 +3,15 @@ import copy
 import numpy as np
 
 try:
-    from .constants import *
+    from .constants import ConfigKeys as ck
     from .utils import sample_from
 except ImportError:
-    from constants import *
+    from constants import ConfigKeys as ck
     from utils import sample_from
 
 
 class TextGenerator:
-    def __init__(self, text_ds, start_prompt, gen_size=40):
+    def __init__(self, config, text_ds, start_prompt, gen_size=40):
         word_to_index = {}
         for index, word in enumerate(text_ds.get_vocab()):
             word_to_index[word] = index
@@ -19,17 +19,18 @@ class TextGenerator:
         self.gen_size = gen_size
         self.start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
         self.vocab = text_ds.get_vocab()
+        self.config = config
 
     def generate_text(self, model):
         start_tokens = copy.deepcopy(self.start_tokens)
         num_tokens_generated = 0
         tokens_generated = []
         while num_tokens_generated <= self.gen_size:
-            pad_len = maxlen - len(start_tokens)
+            pad_len = self.config[ck.MAX_SEQUENCE_LEN] - len(start_tokens)
             sample_index = len(start_tokens) - 1
             if pad_len < 0:
-                x = start_tokens[:maxlen]
-                sample_index = maxlen - 1
+                x = start_tokens[:self.config[ck.MAX_SEQUENCE_LEN]]
+                sample_index = self.config[ck.MAX_SEQUENCE_LEN] - 1
             elif pad_len > 0:
                 x = start_tokens + [0] * pad_len
             else:

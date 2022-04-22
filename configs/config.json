@@ -1,0 +1,17 @@
+{
+  "epochs": 25,
+  "batch_size": 128,
+
+  "vocab_size": 40000,
+  "max_sequence_len": 80,
+
+  "model": {
+    "type": "gpt",
+    "config": {
+      "embed_dim": 512,
+      "num_heads": 2,
+      "feed_forward_dim": 256
+    }
+  }
+
+}

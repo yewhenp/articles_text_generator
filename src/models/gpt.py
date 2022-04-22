@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from ..constants import *
+from ..constants import ConfigKeys as ck
 
 
 def causal_attention_mask(batch_size, n_dest, n_src, dtype):
@@ -60,12 +60,16 @@ class TokenAndPositionEmbedding(tf.keras.layers.Layer):
         return res
 
 
-def create_model():
-    inputs = tf.keras.layers.Input(shape=(maxlen,), dtype=tf.int32, name="input")
-    embedding_layer = TokenAndPositionEmbedding(maxlen, vocab_size, embed_dim)
+def create_model(config):
+    inputs = tf.keras.layers.Input(shape=(config[ck.MAX_SEQUENCE_LEN],), dtype=tf.int32, name="input")
+    embedding_layer = TokenAndPositionEmbedding(config[ck.MAX_SEQUENCE_LEN],
+                                                config[ck.VOCAB_SIZE],
+                                                config[ck.MODEL][ck.MODEL_CONFIG][ck.EMBED_DIM])
     x = embedding_layer(inputs)
-    transformer_block = TransformerBlock(embed_dim, num_heads, feed_forward_dim)
+    transformer_block = TransformerBlock(config[ck.MODEL][ck.MODEL_CONFIG][ck.EMBED_DIM],
+                                         config[ck.MODEL][ck.MODEL_CONFIG][ck.NUM_HEAD],
+                                         config[ck.MODEL][ck.MODEL_CONFIG][ck.FEED_FORWARD_DIM])
     x = transformer_block(x)
-    outputs = tf.keras.layers.Dense(vocab_size, name="output")(x)
+    outputs = tf.keras.layers.Dense(config[ck.VOCAB_SIZE], name="output")(x)
     model = tf.keras.Model(inputs=inputs, outputs=[outputs, x])
     return model

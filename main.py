@@ -30,4 +30,5 @@ if __name__ == '__main__':
 
     model.fit(train_ds.get_dataset(),
               epochs=25,
+              validation_data=test_ds.get_dataset(),
               callbacks=[bleu_callback, wandb_callback])

@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import wandb
 from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu
 
 try:
@@ -32,7 +33,9 @@ class BLEUCallback(tf.keras.callbacks.Callback):
             y_pred_texts.extend([" ".join([self.train_ds.get_vocab()[token] for token in np.squeeze(batch)]) for batch in y_pred_ind])
             y_texts.extend([" ".join([self.train_ds.get_vocab()[token] for token in batch]) for batch in y.numpy()])
 
-        print(f"  BLEU = {self.bleu(y_texts, y_pred_texts)}")
+        result = self.bleu(y_texts, y_pred_texts)
+        print(f"  BLEU = {result}")
+        wandb.log({"bleu": result})
 
     @staticmethod
     def bleu(ref, gen):

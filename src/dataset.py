@@ -18,10 +18,7 @@ class WikitextDataset:
         self.dataset = self.dataset[self.dataset["text"].str.startswith(" =") == False]
         self.dataset = self.dataset.drop(["length"], axis=1)
 
-        if mode == "train":
-            self.dataset = tf.convert_to_tensor(self.dataset["text"][:1000])
-        else:
-            self.dataset = tf.convert_to_tensor(self.dataset["text"])
+        self.dataset = tf.convert_to_tensor(self.dataset["text"])
         self.dataset = tf.data.Dataset.from_tensor_slices(self.dataset)
         logger.info("tensorflow dataset generated")
 

@@ -17,3 +17,4 @@ class ConfigKeys:
     EMBED_DIM = "embed_dim"
     NUM_HEAD = "num_heads"
     FEED_FORWARD_DIM = "feed_forward_dim"
+    LAYERS = "layers"

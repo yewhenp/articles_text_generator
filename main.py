@@ -4,9 +4,9 @@ from argparse import ArgumentParser, Namespace
 
 import tensorflow as tf
 
-# from src.models.gpt import create_model
-from src.models.transformers import create_model
-from src.dataset import WikitextDataset
+from src.models.gpt import create_model as create_model_gpt
+from src.models.transformers import create_model as create_model_transformer
+from src.dataset import WikitextDataset, FilmsDataset
 from src.text_generator import TextGenerator
 from src.callbacks import MetricAndStatisticCallback, TextGeneratorCallback
 from src.constants import ConfigKeys as ck
@@ -18,10 +18,13 @@ def main(args: Namespace):
     with open(args.config) as file:
         config = json.load(file)
 
-    train_ds = WikitextDataset(config)
-    test_ds = WikitextDataset(config, mode="test", vocabulary=train_ds.get_vocab())
+    train_ds = FilmsDataset(config)
+    test_ds = FilmsDataset(config, mode="test", vocabulary=train_ds.get_vocab())
 
-    model = create_model(config)
+    if config[ck.MODEL][ck.MODEL_TYPE] == "transformer":
+        model = create_model_transformer(config)
+    elif config[ck.MODEL][ck.MODEL_TYPE] == "gpt":
+        model = create_model_gpt(config)
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
     def loss_function(real, pred):
@@ -45,7 +48,7 @@ def main(args: Namespace):
     model(next(iter(train_ds.get_dataset()))[0])
     model.summary()
     # They also adjusted the difficulty settings and ease of play so they could appeal to new players while retaining the essential components of the series ' gameplay
-    text_generator = TextGenerator(config, train_ds, "they also adjusted the")
+    text_generator = TextGenerator(config, train_ds, "the film scenario")
     text_generator_callback = TextGeneratorCallback(text_generator)
 
     if config[ck.MODE] == "train":
@@ -55,7 +58,7 @@ def main(args: Namespace):
                   validation_data=test_ds.get_dataset(),
                   callbacks=[wandb_callback, text_generator_callback])
     elif config[ck.MODE] == "infer":
-        model.load_weights("weights/train_best.h5")
+        model.load_weights("weights/val_best.h5")
 
     print(text_generator.generate_text(model))
 

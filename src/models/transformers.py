@@ -239,11 +239,10 @@ class Transformer(tf.keras.Model):
 
 
 def create_model(config):
-    num_layers = 4
+    num_layers = config[ck.MODEL][ck.MODEL_CONFIG][ck.LAYERS]
     d_model = config[ck.MODEL][ck.MODEL_CONFIG][ck.EMBED_DIM]
     num_heads = config[ck.MODEL][ck.MODEL_CONFIG][ck.NUM_HEAD]
     dff = config[ck.MODEL][ck.MODEL_CONFIG][ck.FEED_FORWARD_DIM]
-    seq_len = config[ck.MAX_SEQUENCE_LEN]
     vocab_size = config[ck.VOCAB_SIZE]
 
     return Transformer(num_layers, d_model, num_heads, dff, vocab_size)

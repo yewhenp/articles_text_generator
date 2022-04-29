@@ -1,5 +1,7 @@
 import json
 import os.path
+import random
+import string
 from argparse import ArgumentParser
 
 import pandas as pd
@@ -101,6 +103,91 @@ class WikitextDataset:
 
     def get_dataset(self):
         return self.dataset
+
+    def get_vocab(self):
+        return self.vocab
+
+
+class FilmsDataset:
+    def __init__(self, config, mode="train", vocabulary=None):
+        self.mode = mode
+        filenames = []
+
+        if mode == "train":
+            directories = [
+                "aclImdb/train/pos",
+                "aclImdb/train/neg",
+            ]
+        else:
+            directories = [
+                "aclImdb/test/pos",
+                "aclImdb/test/neg",
+            ]
+        for dir in directories:
+            for f in os.listdir(dir):
+                filenames.append(os.path.join(dir, f))
+
+        print(f"{len(filenames)} files")
+
+        # Create a dataset from text files
+        text_ds = tf.data.TextLineDataset(filenames)
+        text_ds = text_ds.shuffle(buffer_size=256)
+        self.text_ds = text_ds.batch(config[ck.BATCH_SIZE])
+
+        def custom_standardization(input_string):
+            """ Remove html line-break tags and handle punctuation """
+            lowercased = tf.strings.lower(input_string)
+            stripped_html = tf.strings.regex_replace(lowercased, "<br />", " ")
+            return tf.strings.regex_replace(stripped_html, f"([{string.punctuation}])", r" \1")
+
+        if mode == "train":
+            self.vectorize_layer = TextVectorization(
+                standardize=custom_standardization,
+                max_tokens=config[ck.VOCAB_SIZE] - 1,
+                output_mode="int",
+                output_sequence_length=config[ck.MAX_SEQUENCE_LEN] + 1,
+            )
+            logger.info("vectorize_layer created")
+
+            self.vectorize_layer.adapt(self.text_ds)
+            logger.info("vectorize_layer adapted")
+
+            self.vocab = self.vectorize_layer.get_vocabulary()
+            logger.info("vectorize_layer got vocab")
+
+        elif mode == "test":
+            if vocabulary is None:
+                raise RuntimeError("vocabulary is None during test phase")
+
+            self.vectorize_layer = TextVectorization(
+                standardize=custom_standardization,
+                max_tokens=config[ck.VOCAB_SIZE] - 1,
+                output_mode="int",
+                output_sequence_length=config[ck.MAX_SEQUENCE_LEN],
+                vocabulary=vocabulary
+            )
+            logger.info("vectorize_layer created")
+
+            self.vocab = vocabulary
+            logger.info("vectorize_layer got vocab")
+
+        def prepare_lm_inputs_labels(text):
+            """
+            Shift word sequences by 1 position so that the target for position (i) is
+            word at position (i+1). The model will use all words up till position (i)
+            to predict the next word.
+            """
+            text = tf.expand_dims(text, -1)
+            tokenized_sentences = self.vectorize_layer(text)
+            x = tokenized_sentences[:, :-1]
+            y = tokenized_sentences[:, 1:]
+            return x, y
+
+        self.text_ds = self.text_ds.map(prepare_lm_inputs_labels)
+        self.text_ds = self.text_ds.prefetch(tf.data.AUTOTUNE)
+
+    def get_dataset(self):
+        return self.text_ds
 
     def get_vocab(self):
         return self.vocab

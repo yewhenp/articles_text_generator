@@ -116,7 +116,7 @@ def causal_attention_mask(batch_size, n_dest, n_src, dtype):
 
 
 def create_model(config):
-    num_layers = 2
+    num_layers = config[ck.MODEL][ck.MODEL_CONFIG][ck.LAYERS]
     d_model = config[ck.MODEL][ck.MODEL_CONFIG][ck.EMBED_DIM]
     num_heads = config[ck.MODEL][ck.MODEL_CONFIG][ck.NUM_HEAD]
     dff = config[ck.MODEL][ck.MODEL_CONFIG][ck.FEED_FORWARD_DIM]
@@ -131,7 +131,6 @@ def create_model(config):
     inputs = tf.keras.layers.Input(shape=(config[ck.MAX_SEQUENCE_LEN],), dtype=tf.int32, name="input")
     dec_output, weights = decoder(inputs)
 
-    final_output = final_layer(dec_output)  # (batch_size, tar_seq_len, target_vocab_size)
-
+    final_output = final_layer(dec_output)
     model = tf.keras.Model(inputs=inputs, outputs=[final_output])
     return model

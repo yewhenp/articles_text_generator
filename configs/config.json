@@ -1,5 +1,5 @@
 {
-  "mode": "train",
+  "mode": "infer",
 
   "epochs": 25,
   "batch_size": 128,
@@ -10,6 +10,7 @@
   "model": {
     "type": "gpt",
     "config": {
+      "layers": 2,
       "embed_dim": 128,
       "num_heads": 8,
       "feed_forward_dim": 512

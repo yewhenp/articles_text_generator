@@ -1,5 +1,6 @@
 __pycache__/
-weights/
+weights*/
 wandb/
 .idea/
 vocab*.json
+aclImdb*

@@ -1,6 +1,8 @@
 import json
 import os.path
+from argparse import ArgumentParser
 
+import pandas as pd
 import tensorflow as tf
 from datasets import load_dataset
 from keras.layers import TextVectorization
@@ -20,13 +22,16 @@ class WikitextDataset:
         self.dataset = self.dataset[self.dataset["length"] > 2]
         self.dataset = self.dataset[self.dataset["text"].str.startswith(" =") == False]
         self.dataset = self.dataset.drop(["length"], axis=1)
+        self.dataset["text"] = pd.Series((". ".join(self.dataset["text"].tolist())).split(". "))
+        self.dataset = self.dataset[self.dataset["text"].str.startswith("\n") == False]
+        self.dataset["length"] = self.dataset["text"].apply(lambda x: len(x.split(" ")))
+        self.dataset = self.dataset[self.dataset["length"] > 30]
+        self.dataset = self.dataset.drop(["length"], axis=1)
+        self.dataset.reset_index()
 
-        self.dataset = tf.convert_to_tensor(self.dataset["text"][:100])
+        self.dataset = tf.convert_to_tensor(self.dataset["text"][:50000])
         self.dataset = tf.data.Dataset.from_tensor_slices(self.dataset)
         logger.info("tensorflow dataset generated")
-
-        if mode == "train":
-            self.dataset = self.dataset.shuffle(buffer_size=256)
         self.dataset = self.dataset.batch(config[ck.BATCH_SIZE])
 
         logger.info("tensorflow dataset batched")
@@ -70,7 +75,7 @@ class WikitextDataset:
                 standardize="lower_and_strip_punctuation",
                 max_tokens=config[ck.VOCAB_SIZE] - 1,
                 output_mode="int",
-                output_sequence_length=config[ck.MAX_SEQUENCE_LEN] + 1,
+                output_sequence_length=config[ck.MAX_SEQUENCE_LEN],
                 vocabulary=vocabulary
             )
             logger.info("vectorize_layer created")
@@ -99,3 +104,23 @@ class WikitextDataset:
 
     def get_vocab(self):
         return self.vocab
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument("-c", "--config", type=str, required=False, default="configs/config.json")
+    args = parser.parse_args()
+
+    with open(args.config) as file:
+        config = json.load(file)
+
+    train_ds = WikitextDataset(config)
+    test_ds = WikitextDataset(config, mode="test", vocabulary=train_ds.get_vocab())
+    y_texts = []
+
+    for ds_entry in iter(train_ds.get_dataset()):
+        y_texts.extend([" ".join([train_ds.get_vocab()[token] for token in batch]) for batch in ds_entry[0].numpy()])
+    y_texts_lst = (" ".join(y_texts)).split(" ")
+    print("total = ", len(y_texts_lst))
+    print("unk = ", y_texts_lst.count("[UNK]") + y_texts_lst.count(""))
+    print(y_texts_lst[100:120])

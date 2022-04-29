@@ -1,5 +1,6 @@
 class ConfigKeys:
     # General parameters
+    MODE = "mode"
     EPOCHS = "epochs"
     BATCH_SIZE = "batch_size"
     VOCAB_SIZE = "vocab_size"

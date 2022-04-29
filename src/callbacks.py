@@ -54,7 +54,7 @@ class MetricAndStatisticCallback(tf.keras.callbacks.Callback):
         y_pred_texts = []
         y_texts = []
         for x, y in self.test_ds.get_dataset():
-            y_pred, _ = self.model.predict(x)
+            y_pred = self.model.predict(x)
             y_pred_ind = sample_from_batch(y_pred).numpy()
             y_pred_ind[y_pred_ind >= len(self.train_ds.get_vocab())] = 1
             y_pred_texts.extend([" ".join([self.train_ds.get_vocab()[token] for token in np.squeeze(batch)]) for batch in y_pred_ind])

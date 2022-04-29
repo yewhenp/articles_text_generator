@@ -36,7 +36,7 @@ class TextGenerator:
             else:
                 x = start_tokens
             x = np.array([x])
-            y, _ = model.predict(x)
+            y = model.predict(x)
             sample_token = sample_from(y[0][sample_index])
             tokens_generated.append(sample_token)
             start_tokens.append(sample_token)

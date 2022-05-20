@@ -1,5 +1,5 @@
 {
-  "mode": "infer",
+  "mode": "train",
 
   "epochs": 25,
   "batch_size": 128,
@@ -8,10 +8,10 @@
   "max_sequence_len": 80,
 
   "model": {
-    "type": "gpt",
+    "type": "tcvae",
     "config": {
-      "layers": 2,
-      "embed_dim": 128,
+      "layers": 3,
+      "embed_dim": 256,
       "num_heads": 8,
       "feed_forward_dim": 512
     }

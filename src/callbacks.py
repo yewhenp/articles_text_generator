@@ -86,11 +86,8 @@ class MetricAndStatisticCallback(tf.keras.callbacks.Callback):
 
 
 class TextGeneratorCallback(tf.keras.callbacks.Callback):
-    def __init__(self, text_generator, print_every=1):
+    def __init__(self, text_generator):
         self.text_generator: TextGenerator = text_generator
-        self.print_every = print_every
 
     def on_epoch_end(self, epoch, logs=None):
-        if (epoch + 1) % self.print_every != 0:
-            return
         print(f"generated text: {self.text_generator.generate_text(self.model)}")

@@ -6,12 +6,13 @@ import tensorflow as tf
 
 from src.models.gpt import create_model as create_model_gpt
 from src.models.transformers import create_model as create_model_transformer
+from src.models.tcvae import create_model as create_model_tcvae
 from src.dataset import WikitextDataset, FilmsDataset
 from src.text_generator import TextGenerator
 from src.callbacks import MetricAndStatisticCallback, TextGeneratorCallback
 from src.constants import ConfigKeys as ck
 
-# os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 def main(args: Namespace):
@@ -25,6 +26,8 @@ def main(args: Namespace):
         model = create_model_transformer(config)
     elif config[ck.MODEL][ck.MODEL_TYPE] == "gpt":
         model = create_model_gpt(config)
+    elif config[ck.MODEL][ck.MODEL_TYPE] == "tcvae":
+        model = create_model_tcvae(config)
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
     def loss_function(real, pred):
@@ -52,7 +55,7 @@ def main(args: Namespace):
     text_generator_callback = TextGeneratorCallback(text_generator)
 
     if config[ck.MODE] == "train":
-        wandb_callback = MetricAndStatisticCallback(config, train_ds, test_ds, use_wandb=True)
+        wandb_callback = MetricAndStatisticCallback(config, train_ds, test_ds, use_wandb=False)
         model.fit(train_ds.get_dataset(),
                   epochs=config[ck.EPOCHS],
                   validation_data=test_ds.get_dataset(),

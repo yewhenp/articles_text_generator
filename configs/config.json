@@ -8,12 +8,12 @@
   "max_sequence_len": 80,
 
   "model": {
-    "type": "transformer",
+    "type": "gpt",
     "config": {
-      "layers": 6,
-      "embed_dim": 256,
-      "num_heads": 8,
-      "feed_forward_dim": 256
+      "layers": 12,
+      "embed_dim": 768,
+      "num_heads": 12,
+      "feed_forward_dim": 128
     }
   }
 

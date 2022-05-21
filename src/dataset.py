@@ -130,7 +130,7 @@ class FilmsDataset:
         print(f"{len(filenames)} files")
 
         # Create a dataset from text files
-        text_ds = tf.data.TextLineDataset(filenames[:10000])
+        text_ds = tf.data.TextLineDataset(filenames)
         text_ds = text_ds.shuffle(buffer_size=256)
         self.text_ds = text_ds.batch(config[ck.BATCH_SIZE])
 

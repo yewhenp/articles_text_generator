@@ -8,7 +8,7 @@
   "max_sequence_len": 80,
 
   "model": {
-    "type": "tcvae",
+    "type": "transformer",
     "config": {
       "layers": 3,
       "embed_dim": 256,

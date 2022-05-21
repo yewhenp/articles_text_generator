@@ -28,6 +28,7 @@ def main(args: Namespace):
         model = create_model_gpt(config)
     elif config[ck.MODEL][ck.MODEL_TYPE] == "tcvae":
         model = create_model_tcvae(config)
+
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
     def loss_function(real, pred):
@@ -40,9 +41,9 @@ def main(args: Namespace):
         return tf.reduce_sum(loss_) / tf.reduce_sum(mask)
 
     lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-        initial_learning_rate=0.1,
+        initial_learning_rate=0.4,
         decay_steps=10000,
-        decay_rate=0.9)
+        decay_rate=0.99)
     optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
     model.compile(
         optimizer=optimizer,

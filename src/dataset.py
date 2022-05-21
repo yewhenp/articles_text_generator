@@ -127,6 +127,8 @@ class FilmsDataset:
             for f in os.listdir(dir):
                 filenames.append(os.path.join(dir, f))
 
+        if mode != "train":
+            filenames = filenames[:250]
         print(f"{len(filenames)} files")
 
         # Create a dataset from text files

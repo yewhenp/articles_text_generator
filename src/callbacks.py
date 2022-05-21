@@ -90,4 +90,5 @@ class TextGeneratorCallback(tf.keras.callbacks.Callback):
         self.text_generator: TextGenerator = text_generator
 
     def on_epoch_end(self, epoch, logs=None):
-        print(f"generated text: {self.text_generator.generate_text(self.model)}")
+        if epoch % 3 == 0:
+            print(f"generated text: {self.text_generator.generate_text(self.model)}")

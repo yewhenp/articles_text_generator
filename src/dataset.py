@@ -163,7 +163,7 @@ class FilmsDataset:
                 standardize=custom_standardization,
                 max_tokens=config[ck.VOCAB_SIZE] - 1,
                 output_mode="int",
-                output_sequence_length=config[ck.MAX_SEQUENCE_LEN],
+                output_sequence_length=config[ck.MAX_SEQUENCE_LEN] + 1,
                 vocabulary=vocabulary
             )
             logger.info("vectorize_layer created")

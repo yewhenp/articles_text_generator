@@ -12,6 +12,7 @@ def sample_gaussian(mu, logvar):
 class TCVAE(tf.keras.Model):
     def __init__(self, num_layers, d_model, num_heads, dff, vocab_size, maximum_position_encoding, rate=0.1):
         super().__init__()
+        self.d_model = d_model
         self.encoder = Encoder(num_layers=num_layers, d_model=d_model,
                                num_heads=num_heads, dff=dff,
                                input_vocab_size=vocab_size, rate=rate, maximum_position_encoding=maximum_position_encoding)
@@ -36,6 +37,8 @@ class TCVAE(tf.keras.Model):
         enc_padding_mask, look_ahead_mask, dec_padding_mask = self.create_masks(inp, tar)
 
         enc_output = self.encoder(inp, training, enc_padding_mask)
+        dec_output, attention_weights = self.decoder(tar, enc_output, training, look_ahead_mask, dec_padding_mask)
+
         prior_posterior_attn_output, _ = self.prior_posterior_mha(value=enc_output, key=enc_output, query=enc_output, attention_mask=enc_padding_mask, return_attention_scores=True)
         prior_posterior_attn_output = self.prior_posterior_mha_dropout(prior_posterior_attn_output, training=training)
         prior_posterior_attn_output = self.prior_posterior_mha_layernorm(prior_posterior_attn_output)
@@ -44,14 +47,9 @@ class TCVAE(tf.keras.Model):
         post_mulogvar = self.post_mulogvar_dropout(post_mulogvar, training=training)
         post_mulogvar = self.post_mulogvar_layernorm(post_mulogvar)
         post_mu, post_logvar = tf.split(post_mulogvar, 2, axis=2)
-        # prior_mulogvar = self.prior_mulogvar(self.prior_mulogvar_inner())
-        # prior_mu, prior_logvar = tf.split(prior_mulogvar, 2, axis=1)
         latent_sample = sample_gaussian(post_mu, post_logvar)
 
-        dec_output, attention_weights = self.decoder(tar, latent_sample, training, look_ahead_mask, dec_padding_mask)
-
         final_output = self.final_layer(tf.concat([dec_output, latent_sample], axis=2))
-        # final_output = self.final_layer(dec_output)
         return final_output
 
     def create_masks(self, inp, tar):

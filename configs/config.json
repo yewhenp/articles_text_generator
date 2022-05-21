@@ -2,18 +2,18 @@
   "mode": "train",
 
   "epochs": 25,
-  "batch_size": 128,
+  "batch_size": 64,
 
-  "vocab_size": 30000,
+  "vocab_size": 20000,
   "max_sequence_len": 80,
 
   "model": {
     "type": "tcvae",
     "config": {
-      "layers": 3,
+      "layers": 4,
       "embed_dim": 256,
       "num_heads": 8,
-      "feed_forward_dim": 512
+      "feed_forward_dim": 256
     }
   }
 

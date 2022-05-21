@@ -10,21 +10,21 @@ def sample_gaussian(mu, logvar):
 
 
 class TCVAE(tf.keras.Model):
-    def __init__(self, num_layers, d_model, num_heads, dff, vocab_size, rate=0.1):
+    def __init__(self, num_layers, d_model, num_heads, dff, vocab_size, maximum_position_encoding, rate=0.1):
         super().__init__()
         self.encoder = Encoder(num_layers=num_layers, d_model=d_model,
                                num_heads=num_heads, dff=dff,
-                               input_vocab_size=vocab_size, rate=rate, vocab_size=vocab_size)
+                               input_vocab_size=vocab_size, rate=rate, maximum_position_encoding=maximum_position_encoding)
 
         self.decoder = Decoder(num_layers=num_layers, d_model=d_model,
                                num_heads=num_heads, dff=dff,
-                               target_vocab_size=vocab_size, rate=rate, vocab_size=vocab_size)
+                               target_vocab_size=vocab_size, rate=rate, maximum_position_encoding=maximum_position_encoding)
 
         self.prior_posterior_mha = tf.keras.layers.MultiHeadAttention(key_dim=d_model, num_heads=num_heads)
         self.prior_posterior_mha_dropout = tf.keras.layers.Dropout(rate)
         self.prior_posterior_mha_layernorm = tf.keras.layers.LayerNormalization(epsilon=1e-6)
 
-        self.post_mulogvar = tf.keras.layers.Dense(d_model * 2)
+        self.post_mulogvar = tf.keras.layers.Dense(d_model * 2, activation='tanh')
         self.post_mulogvar_dropout = tf.keras.layers.Dropout(rate)
         self.post_mulogvar_layernorm = tf.keras.layers.LayerNormalization(epsilon=1e-6)
         self.final_layer = tf.keras.layers.Dense(vocab_size)
@@ -36,7 +36,7 @@ class TCVAE(tf.keras.Model):
         enc_padding_mask, look_ahead_mask, dec_padding_mask = self.create_masks(inp, tar)
 
         enc_output = self.encoder(inp, training, enc_padding_mask)
-        prior_posterior_attn_output, _ = self.prior_posterior_mha(enc_output, enc_output, enc_output, enc_padding_mask)
+        prior_posterior_attn_output, _ = self.prior_posterior_mha(value=enc_output, key=enc_output, query=enc_output, attention_mask=enc_padding_mask, return_attention_scores=True)
         prior_posterior_attn_output = self.prior_posterior_mha_dropout(prior_posterior_attn_output, training=training)
         prior_posterior_attn_output = self.prior_posterior_mha_layernorm(prior_posterior_attn_output)
 
@@ -70,4 +70,4 @@ def create_model(config):
     dff = config[ck.MODEL][ck.MODEL_CONFIG][ck.FEED_FORWARD_DIM]
     vocab_size = config[ck.VOCAB_SIZE]
 
-    return TCVAE(num_layers, d_model, num_heads, dff, vocab_size)
+    return TCVAE(num_layers, d_model, num_heads, dff, vocab_size, 80)

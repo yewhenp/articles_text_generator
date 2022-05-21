@@ -1,5 +1,6 @@
 import tensorflow as tf
-from .transformers import Encoder, Decoder, create_padding_mask, create_look_ahead_mask, MultiHeadAttention
+from .transformers import Encoder, create_padding_mask, create_look_ahead_mask, MultiHeadAttention
+from .gpt import Decoder
 from ..constants import ConfigKeys as ck
 
 
@@ -18,7 +19,7 @@ class TCVAE(tf.keras.Model):
 
         self.decoder = Decoder(num_layers=num_layers, d_model=d_model,
                                num_heads=num_heads, dff=dff,
-                               target_vocab_size=vocab_size, rate=rate, vocab_size=vocab_size)
+                               target_vocab_size=vocab_size)
 
         self.prior_posterior_mha = MultiHeadAttention(d_model=d_model, num_heads=num_heads)
         self.prior_posterior_mha_dropout = tf.keras.layers.Dropout(rate)
@@ -38,7 +39,6 @@ class TCVAE(tf.keras.Model):
         padding_mask, look_ahead_mask = self.create_masks(inp, tar)
 
         enc_output = self.encoder(inp, training, padding_mask)
-        dec_output, attention_weights = self.decoder(tar, enc_output, training, look_ahead_mask, padding_mask)
         prior_posterior_attn_output, _ = self.prior_posterior_mha(enc_output, enc_output, enc_output, padding_mask)
         prior_posterior_attn_output = self.prior_posterior_mha_dropout(prior_posterior_attn_output, training=training)
         prior_posterior_attn_output = self.prior_posterior_mha_layernorm(prior_posterior_attn_output)
@@ -51,7 +51,10 @@ class TCVAE(tf.keras.Model):
         # prior_mu, prior_logvar = tf.split(prior_mulogvar, 2, axis=1)
         latent_sample = sample_gaussian(post_mu, post_logvar)
 
+        dec_output, attention_weights = self.decoder(inputs)
+
         final_output = self.final_layer(tf.concat([dec_output, latent_sample], axis=2))
+        # final_output = self.final_layer(dec_output)
         return final_output
 
     def create_masks(self, inp, tar):

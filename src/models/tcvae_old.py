@@ -1,6 +1,5 @@
 import tensorflow as tf
 from .transformers import Encoder, Decoder, create_padding_mask, create_look_ahead_mask
-from .gpt import Decoder as GPTDecoder
 from ..constants import ConfigKeys as ck
 
 
@@ -18,9 +17,9 @@ class TCVAE(tf.keras.Model):
                                num_heads=num_heads, dff=dff,
                                input_vocab_size=vocab_size, rate=rate, maximum_position_encoding=maximum_position_encoding)
 
-        self.decoder = GPTDecoder(num_layers=num_layers, d_model=d_model,
-                                   num_heads=num_heads, dff=dff,
-                                   target_vocab_size=vocab_size)
+        self.decoder = Decoder(num_layers=num_layers, d_model=d_model,
+                               num_heads=num_heads, dff=dff,
+                               target_vocab_size=vocab_size, rate=rate, maximum_position_encoding=maximum_position_encoding)
 
         self.prior_posterior_mha = tf.keras.layers.MultiHeadAttention(key_dim=d_model, num_heads=num_heads)
         self.prior_posterior_mha_dropout = tf.keras.layers.Dropout(rate)
@@ -38,7 +37,7 @@ class TCVAE(tf.keras.Model):
         enc_padding_mask, look_ahead_mask, dec_padding_mask = self.create_masks(inp, tar)
 
         enc_output = self.encoder(inp, training, enc_padding_mask)
-        dec_output, attention_weights = self.decoder(inputs)
+        dec_output, attention_weights = self.decoder(tar, enc_output, training, look_ahead_mask, dec_padding_mask)
 
         prior_posterior_attn_output, _ = self.prior_posterior_mha(value=enc_output, key=enc_output, query=enc_output, attention_mask=enc_padding_mask, return_attention_scores=True)
         prior_posterior_attn_output = self.prior_posterior_mha_dropout(prior_posterior_attn_output, training=training)

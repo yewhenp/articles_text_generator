@@ -58,14 +58,14 @@ def positional_encoding(position, d_model):
 
 
 class Decoder(tf.keras.layers.Layer):
-    def __init__(self, num_layers, d_model, num_heads, dff, target_vocab_size, rate=0.1):
+    def __init__(self, num_layers, d_model, num_heads, dff, target_vocab_size, sequence_len, rate=0.1):
         super(Decoder, self).__init__()
 
         self.d_model = d_model
         self.num_layers = num_layers
 
         self.embedding = tf.keras.layers.Embedding(target_vocab_size, d_model)
-        self.pos_encoding = positional_encoding(80, d_model)
+        self.pos_encoding = positional_encoding(sequence_len, d_model)
 
         self.dec_layers = [
             DecoderLayer(embed_dim=d_model, num_heads=num_heads, dff=dff, rate=rate)
@@ -121,10 +121,11 @@ def create_model(config):
     num_heads = config[ck.MODEL][ck.MODEL_CONFIG][ck.NUM_HEAD]
     dff = config[ck.MODEL][ck.MODEL_CONFIG][ck.FEED_FORWARD_DIM]
     target_vocab_size = config[ck.VOCAB_SIZE]
+    sequence_len = config[ck.MAX_SEQUENCE_LEN]
 
     decoder = Decoder(num_layers=num_layers, d_model=d_model,
                            num_heads=num_heads, dff=dff,
-                           target_vocab_size=target_vocab_size)
+                           target_vocab_size=target_vocab_size, sequence_len=sequence_len)
 
     final_layer = tf.keras.layers.Dense(target_vocab_size)
 

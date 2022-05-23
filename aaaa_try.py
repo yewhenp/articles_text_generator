@@ -264,7 +264,10 @@ num_tokens_generated = 40
 text_gen_callback = TextGeneratorAAA(num_tokens_generated, start_tokens, train_ds.get_vocab())
 
 
-from src.models.gpt import create_model as transformer_create
+from src.models.gpt import create_model as create_model_gpt
+from src.models.transformers import create_model as create_model_transformer
+from src.models.tcvae import create_model as create_model_tcvae
+from src.constants import ConfigKeys as ck
 #from src.dataset import WikitextDataset, FilmsDataset
 
 #with open("configs/config.json") as file:
@@ -274,7 +277,13 @@ from src.models.gpt import create_model as transformer_create
 #test_ds = FilmsDataset(config, mode="test", vocabulary=train_ds.get_vocab())
 
 #model = create_model()
-model = transformer_create(config)
+if config[ck.MODEL][ck.MODEL_TYPE] == "transformer":
+    model = create_model_transformer(config)
+elif config[ck.MODEL][ck.MODEL_TYPE] == "gpt":
+    model = create_model_gpt(config)
+elif config[ck.MODEL][ck.MODEL_TYPE] == "tcvae":
+    model = create_model_tcvae(config)
+
 model(next(iter(train_ds.get_dataset()))[0])
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 model.compile(

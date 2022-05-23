@@ -199,12 +199,12 @@ class TextGeneratorAAA(keras.callbacks.Callback):
                 x = start_tokens[:maxlen]
                 sample_index = maxlen - 1
             elif pad_len > 0:
-                x = start_tokens + [0] * pad_len
+                x = ([0] * pad_len) + start_tokens
             else:
                 x = start_tokens
             x = np.array([x])
             y = self.model.predict(x)
-            sample_token = self.sample_from(y[0][sample_index])
+            sample_token = self.sample_from(y[0])
             tokens_generated.append(sample_token)
             start_tokens.append(sample_token)
             num_tokens_generated = len(tokens_generated)
@@ -251,7 +251,7 @@ test_ds = FilmsDataset(config, mode="test", vocabulary=train_ds.get_vocab())
 
 #text_generator = TextGenerator(config, train_ds, "the film scenario")
 #text_generator_callback = TextGeneratorCallback(text_generator)
-wandb_callback = MetricAndStatisticCallback({}, train_ds, test_ds, use_wandb=True)
+wandb_callback = MetricAndStatisticCallback({}, train_ds, test_ds, use_wandb=False)
 
 
 word_to_index = {}
@@ -292,6 +292,6 @@ model.compile(
 
 model.summary()
 
-model.fit(train_ds.get_dataset(), epochs=25, callbacks=[text_gen_callback, wandb_callback], validation_data=test_ds.get_dataset())
+model.fit(train_ds.get_dataset(), epochs=25, callbacks=[text_gen_callback], validation_data=test_ds.get_dataset())
 
 

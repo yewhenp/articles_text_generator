@@ -2,7 +2,7 @@
   "mode": "train",
 
   "epochs": 25,
-  "batch_size": 32,
+  "batch_size": 64,
 
   "vocab_size": 20000,
   "max_sequence_len": 80,
@@ -10,10 +10,10 @@
   "model": {
     "type": "transformer",
     "config": {
-      "layers": 5,
-      "embed_dim": 512,
-      "num_heads": 4,
-      "feed_forward_dim": 256
+      "layers": 2,
+      "embed_dim": 256,
+      "num_heads": 8,
+      "feed_forward_dim": 512
     }
   }
 

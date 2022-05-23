@@ -161,16 +161,17 @@ class Transformer(tf.keras.Model):
         self.decoder = Decoder(num_layers=num_layers, d_model=d_model,
                                num_heads=num_heads, dff=dff,
                                target_vocab_size=vocab_size, rate=rate, maximum_position_encoding=maximum_position_encoding)
+        self.flatt = tf.keras.layers.Flatten()
         self.final_layer = tf.keras.layers.Dense(vocab_size)
 
     def call(self, x, training):
         inp = x
-        tar = tf.concat([x[:, 2:], tf.zeros_like(x[:, 0])[:, tf.newaxis], tf.zeros_like(x[:, 0])[:, tf.newaxis]], 1)
+        tar = tf.concat([inp[:, :-1], tf.zeros_like(inp[:, 0])[:, tf.newaxis]], 1)
         enc_padding_mask, look_ahead_mask, dec_padding_mask = self.create_masks(inp, tar)
         enc_output = self.encoder(inp, training, enc_padding_mask)
         dec_output, attention_weights = self.decoder(tar, enc_output, training, look_ahead_mask, dec_padding_mask)
         final_output = self.final_layer(dec_output)
-        return final_output
+        return final_output[:, -1]
 
     def create_masks(self, inp, tar):
         enc_padding_mask = create_padding_mask(inp)

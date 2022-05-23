@@ -18,9 +18,12 @@ class TCVAE(tf.keras.Model):
                                num_heads=num_heads, dff=dff,
                                input_vocab_size=vocab_size, rate=rate, maximum_position_encoding=maximum_position_encoding)
 
-        self.decoder = GPTDecoder(num_layers=num_layers, d_model=d_model,
+        # self.decoder = GPTDecoder(num_layers=num_layers, d_model=d_model,
+        #                            num_heads=num_heads, dff=dff,
+        #                            target_vocab_size=vocab_size, sequence_len=80)
+        self.decoder = Decoder(num_layers=num_layers, d_model=d_model,
                                    num_heads=num_heads, dff=dff,
-                                   target_vocab_size=vocab_size, sequence_len=80)
+                                   target_vocab_size=vocab_size, maximum_position_encoding=80)
 
         self.prior_posterior_mha = tf.keras.layers.MultiHeadAttention(key_dim=d_model, num_heads=num_heads)
         self.prior_posterior_mha_dropout = tf.keras.layers.Dropout(rate)
@@ -33,12 +36,14 @@ class TCVAE(tf.keras.Model):
 
     def call(self, inputs, training):
         inp = inputs
-        tar = tf.concat([inputs[:, 1:], tf.zeros_like(inputs[:, 0])[:, tf.newaxis]], 1)
+        tar = tf.concat([inputs[:, :-1], tf.zeros_like(inputs[:, 0])[:, tf.newaxis]], 1)
 
         enc_padding_mask, look_ahead_mask, dec_padding_mask = self.create_masks(inp, tar)
 
-        enc_output = self.encoder(inp, training, enc_padding_mask)[-1]
-        dec_output, attention_weights = self.decoder(inputs)
+        enc_output = self.encoder(inp, training, enc_padding_mask)
+        # dec_output, attention_weights = self.decoder(inputs)
+        dec_output, attention_weights = self.decoder(tar, enc_output, training, look_ahead_mask, dec_padding_mask)
+        enc_output = enc_output[-1]
 
         prior_posterior_attn_output, _ = self.prior_posterior_mha(value=enc_output, key=enc_output, query=enc_output, attention_mask=enc_padding_mask, return_attention_scores=True)
         prior_posterior_attn_output = self.prior_posterior_mha_dropout(prior_posterior_attn_output, training=training)

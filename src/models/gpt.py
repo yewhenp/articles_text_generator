@@ -96,11 +96,11 @@ def create_model(config):
 
     decoder = Decoder(num_layers=num_layers, d_model=d_model,
                            num_heads=num_heads, dff=dff,
-                           target_vocab_size=target_vocab_size, sequence_len=sequence_len)
+                           target_vocab_size=target_vocab_size, sequence_len=sequence_len // 2)
 
     final_layer = tf.keras.layers.Dense(target_vocab_size)
 
-    inputs = tf.keras.layers.Input(shape=(config[ck.MAX_SEQUENCE_LEN],), dtype=tf.int32, name="input")
+    inputs = tf.keras.layers.Input(shape=(config[ck.MAX_SEQUENCE_LEN] // 2,), dtype=tf.int32, name="input")
     dec_output, weights = decoder(inputs)
 
     final_output = final_layer(dec_output)

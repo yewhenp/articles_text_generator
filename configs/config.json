@@ -2,17 +2,17 @@
   "mode": "train",
 
   "epochs": 25,
-  "batch_size": 64,
+  "batch_size": 32,
 
   "vocab_size": 20000,
   "max_sequence_len": 80,
 
   "model": {
-    "type": "transformer",
+    "type": "gpt",
     "config": {
-      "layers": 2,
-      "embed_dim": 256,
-      "num_heads": 8,
+      "layers": 10,
+      "embed_dim": 768,
+      "num_heads": 12,
       "feed_forward_dim": 512
     }
   }

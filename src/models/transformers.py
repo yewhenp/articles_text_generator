@@ -171,7 +171,7 @@ class Transformer(tf.keras.Model):
         enc_output = self.encoder(inp, training, enc_padding_mask)
         dec_output, attention_weights = self.decoder(tar, enc_output, training, look_ahead_mask, dec_padding_mask)
         final_output = self.final_layer(dec_output)
-        return final_output[:, -1]
+        return final_output
 
     def create_masks(self, inp, tar):
         enc_padding_mask = create_padding_mask(inp)

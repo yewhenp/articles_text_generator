@@ -67,7 +67,7 @@ class TokenAndPositionEmbedding(layers.Layer):
 
 
 vocab_size = 30000  # Only consider the top 20k words
-maxlen = 80  # Max sequence size
+maxlen = 40  # Max sequence size
 embed_dim = 128  # Embedding size for each token
 num_heads = 8  # Number of attention heads
 feed_forward_dim = 512  # Hidden layer size in feed forward network inside transformer
@@ -204,7 +204,7 @@ class TextGeneratorAAA(keras.callbacks.Callback):
                 x = start_tokens
             x = np.array([x])
             y = self.model.predict(x)
-            sample_token = self.sample_from(y[0])
+            sample_token = self.sample_from(y[0][0])
             tokens_generated.append(sample_token)
             start_tokens.append(sample_token)
             num_tokens_generated = len(tokens_generated)

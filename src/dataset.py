@@ -269,8 +269,8 @@ class FilmsDataset:
             """
             text = tf.expand_dims(text, -1)
             tokenized_sentences = self.vectorize_layer(text)
-            x = tokenized_sentences[:, :-1]
-            y = tokenized_sentences[:, -1]
+            x = tokenized_sentences[:, :40]
+            y = tokenized_sentences[:, 40:80]
             return x, y
 
         self.text_ds = self.text_ds.map(prepare_lm_inputs_labels)
@@ -305,6 +305,6 @@ if __name__ == '__main__':
     zeros = 0
     tot = 0
     for ds_entry in iter(train_ds.get_dataset()):
-        zeros += np.sum(ds_entry[1].numpy() == 0)
+        zeros += np.sum(ds_entry[1].numpy() == 0) + np.sum(ds_entry[1].numpy() == 1)
         tot += len(ds_entry[1].numpy())
     print(zeros, tot)

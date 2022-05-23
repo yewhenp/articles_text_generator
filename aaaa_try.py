@@ -84,7 +84,7 @@ def create_model():
     return model
 
 
-batch_size = 128
+batch_size = 32
 
 # The dataset contains each review in a separate text file
 # The text files are present in four different folders
@@ -127,8 +127,8 @@ vectorize_layer = TextVectorization(
     output_mode="int",
     output_sequence_length=maxlen + 1,
 )
-vectorize_layer.adapt(text_ds)
-vocab = vectorize_layer.get_vocabulary()  # To get words back from token indices
+#vectorize_layer.adapt(text_ds)
+#vocab = vectorize_layer.get_vocabulary()  # To get words back from token indices
 
 
 def prepare_lm_inputs_labels(text):
@@ -144,14 +144,14 @@ def prepare_lm_inputs_labels(text):
     return x, y
 
 
-text_ds = text_ds.map(prepare_lm_inputs_labels)
-text_ds = text_ds.prefetch(tf.data.AUTOTUNE)
+#text_ds = text_ds.map(prepare_lm_inputs_labels)
+#text_ds = text_ds.prefetch(tf.data.AUTOTUNE)
 
-val_ds = val_ds.map(prepare_lm_inputs_labels)
-val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
+#val_ds = val_ds.map(prepare_lm_inputs_labels)
+#val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
 
 
-class TextGenerator(keras.callbacks.Callback):
+class TextGeneratorAAA(keras.callbacks.Callback):
     """A callback to generate text from a trained model.
     1. Feed some starting prompt to the model
     2. Predict probabilities for the next token
@@ -215,17 +215,19 @@ class TextGenerator(keras.callbacks.Callback):
 
 
 # Tokenize starting prompt
-word_to_index = {}
-for index, word in enumerate(vocab):
-    word_to_index[word] = index
+#word_to_index = {}
+#for index, word in enumerate(vocab):
+#    word_to_index[word] = index
 
-start_prompt = "this movie is"
-start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
-num_tokens_generated = 40
-text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
+#start_prompt = "this movie is"
+#start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
+#num_tokens_generated = 40
+#text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
 
 
-from src.callbacks import MetricAndStatisticCallback
+#from src.callbacks import MetricAndStatisticCallback
+from src.text_generator import TextGenerator
+from src.callbacks import MetricAndStatisticCallback, TextGeneratorCallback
 
 
 class CallbackDSWrapper:
@@ -239,26 +241,48 @@ class CallbackDSWrapper:
     def get_vocab(self):
         return self.vocab
 
-
-ds_wrap_train = CallbackDSWrapper(text_ds, vocab)
-ds_wrap_val = CallbackDSWrapper(val_ds, vocab)
-wandb_callback = MetricAndStatisticCallback({}, ds_wrap_train, ds_wrap_val, use_wandb=True)
-
-from src.models.gpt import create_model as transformer_create
-
-
 with open("configs/config.json") as file:
     config = json.load(file)
+#ds_wrap_train = CallbackDSWrapper(text_ds, vocab)
+#ds_wrap_val = CallbackDSWrapper(val_ds, vocab)
+from src.dataset import WikitextDataset, FilmsDataset
+train_ds = FilmsDataset(config)
+test_ds = FilmsDataset(config, mode="test", vocabulary=train_ds.get_vocab())
 
+#text_generator = TextGenerator(config, train_ds, "the film scenario")
+#text_generator_callback = TextGeneratorCallback(text_generator)
+wandb_callback = MetricAndStatisticCallback({}, train_ds, test_ds, use_wandb=True)
+
+
+word_to_index = {}
+for index, word in enumerate(train_ds.get_vocab()):
+    word_to_index[word] = index
+
+start_prompt = "this movie is"
+start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
+num_tokens_generated = 40
+text_gen_callback = TextGeneratorAAA(num_tokens_generated, start_tokens, train_ds.get_vocab())
+
+
+from src.models.gpt import create_model as transformer_create
+#from src.dataset import WikitextDataset, FilmsDataset
+
+#with open("configs/config.json") as file:
+#    config = json.load(file)
+
+#train_ds = FilmsDataset(config)
+#test_ds = FilmsDataset(config, mode="test", vocabulary=train_ds.get_vocab())
+
+#model = create_model()
 model = transformer_create(config)
-# model(next(iter(text_ds))[0])
+model(next(iter(train_ds.get_dataset()))[0])
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 model.compile(
-    "adam", loss=[loss_fn, None],
+    "adam", loss=loss_fn,
 )  # No loss and optimization based on word embeddings from transformer block
 
 model.summary()
 
-model.fit(text_ds, epochs=25, callbacks=[text_gen_callback, wandb_callback], validation_data=val_ds)
+model.fit(train_ds.get_dataset(), epochs=25, callbacks=[text_gen_callback, wandb_callback], validation_data=test_ds.get_dataset())
 
 

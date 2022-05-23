@@ -57,7 +57,7 @@ class Decoder(tf.keras.layers.Layer):
         positions = self.pos_emb(positions)
         x += positions
 
-        x = self.dropout(x)
+        #x = self.dropout(x)
 
         look_ahead_mask = causal_attention_mask(batch_size, seq_len, seq_len, tf.bool)
 

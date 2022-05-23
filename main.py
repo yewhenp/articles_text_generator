@@ -12,7 +12,7 @@ from src.text_generator import TextGenerator
 from src.callbacks import MetricAndStatisticCallback, TextGeneratorCallback
 from src.constants import ConfigKeys as ck
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 def main(args: Namespace):
@@ -46,8 +46,8 @@ def main(args: Namespace):
         decay_rate=0.99)
     optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
     model.compile(
-        optimizer=optimizer,
-        loss=loss_function,
+        optimizer="adam",
+        loss=loss_fn,
     )
     model(next(iter(train_ds.get_dataset()))[0])
     model.summary()
@@ -56,7 +56,7 @@ def main(args: Namespace):
     text_generator_callback = TextGeneratorCallback(text_generator)
 
     if config[ck.MODE] == "train":
-        wandb_callback = MetricAndStatisticCallback(config, train_ds, test_ds, use_wandb=False)
+        wandb_callback = MetricAndStatisticCallback(config, train_ds, test_ds, use_wandb=True)
         model.fit(train_ds.get_dataset(),
                   epochs=config[ck.EPOCHS],
                   validation_data=test_ds.get_dataset(),

@@ -20,7 +20,7 @@ class TCVAE(tf.keras.Model):
 
         self.decoder = GPTDecoder(num_layers=num_layers, d_model=d_model,
                                    num_heads=num_heads, dff=dff,
-                                   target_vocab_size=vocab_size, sequence_len=80)
+                                   target_vocab_size=vocab_size, sequence_len=maximum_position_encoding)
 
         self.prior_posterior_mha = tf.keras.layers.MultiHeadAttention(key_dim=d_model, num_heads=num_heads)
         self.prior_posterior_mha_dropout = tf.keras.layers.Dropout(rate)
@@ -68,5 +68,6 @@ def create_model(config):
     num_heads = config[ck.MODEL][ck.MODEL_CONFIG][ck.NUM_HEAD]
     dff = config[ck.MODEL][ck.MODEL_CONFIG][ck.FEED_FORWARD_DIM]
     vocab_size = config[ck.VOCAB_SIZE]
+    sequence_len = config[ck.MAX_SEQUENCE_LEN]
 
-    return TCVAE(num_layers, d_model, num_heads, dff, vocab_size, 80)
+    return TCVAE(num_layers, d_model, num_heads, dff, vocab_size, sequence_len)

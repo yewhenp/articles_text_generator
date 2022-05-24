@@ -31,7 +31,7 @@ class WikitextDataset:
         self.dataset = self.dataset.drop(["length"], axis=1)
         self.dataset.reset_index()
 
-        self.dataset = tf.convert_to_tensor(self.dataset["text"][:50000])
+        self.dataset = tf.convert_to_tensor(self.dataset["text"][:5000])
         self.dataset = tf.data.Dataset.from_tensor_slices(self.dataset)
         logger.info("tensorflow dataset generated")
         self.dataset = self.dataset.batch(config[ck.BATCH_SIZE])
@@ -39,35 +39,22 @@ class WikitextDataset:
         logger.info("tensorflow dataset batched")
 
         if mode == "train":
-            if not os.path.exists("vocab.json"):
-                self.vectorize_layer = TextVectorization(
-                    standardize="lower_and_strip_punctuation",
-                    max_tokens=config[ck.VOCAB_SIZE] - 1,
-                    output_mode="int",
-                    output_sequence_length=config[ck.MAX_SEQUENCE_LEN] + 1,
-                )
-                logger.info("vectorize_layer created")
+            self.vectorize_layer = TextVectorization(
+                standardize="lower_and_strip_punctuation",
+                max_tokens=config[ck.VOCAB_SIZE] - 1,
+                output_mode="int",
+                output_sequence_length=config[ck.MAX_SEQUENCE_LEN] + 1,
+            )
+            logger.info("vectorize_layer created")
 
-                self.vectorize_layer.adapt(self.dataset)
-                logger.info("vectorize_layer adapted")
+            self.vectorize_layer.adapt(self.dataset)
+            logger.info("vectorize_layer adapted")
 
-                self.vocab = self.vectorize_layer.get_vocabulary()
-                logger.info("vectorize_layer got vocab")
+            self.vocab = self.vectorize_layer.get_vocabulary()
+            logger.info("vectorize_layer got vocab")
 
-                with open("vocab.json", 'w') as vocab_file:
-                    json.dump(self.vocab, vocab_file)
-
-            else:
-                with open("vocab.json") as vocab_file:
-                    self.vocab = json.load(vocab_file)
-                self.vectorize_layer = TextVectorization(
-                    standardize="lower_and_strip_punctuation",
-                    max_tokens=config[ck.VOCAB_SIZE] - 1,
-                    output_mode="int",
-                    output_sequence_length=config[ck.MAX_SEQUENCE_LEN] + 1,
-                    vocabulary=self.vocab,
-                )
-                logger.info("vocab loaded")
+            with open("vocab.json", 'w') as vocab_file:
+                json.dump(self.vocab, vocab_file)
 
         elif mode == "test":
             if vocabulary is None:
@@ -77,7 +64,7 @@ class WikitextDataset:
                 standardize="lower_and_strip_punctuation",
                 max_tokens=config[ck.VOCAB_SIZE] - 1,
                 output_mode="int",
-                output_sequence_length=config[ck.MAX_SEQUENCE_LEN],
+                output_sequence_length=config[ck.MAX_SEQUENCE_LEN] + 1,
                 vocabulary=vocabulary
             )
             logger.info("vectorize_layer created")

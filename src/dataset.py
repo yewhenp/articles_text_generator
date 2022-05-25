@@ -31,7 +31,7 @@ class WikitextDataset:
         self.dataset = self.dataset.drop(["length"], axis=1)
         self.dataset.reset_index()
 
-        self.dataset = tf.convert_to_tensor(self.dataset["text"][:5000])
+        self.dataset = tf.convert_to_tensor(self.dataset["text"])
         self.dataset = tf.data.Dataset.from_tensor_slices(self.dataset)
         logger.info("tensorflow dataset generated")
         self.dataset = self.dataset.batch(config[ck.BATCH_SIZE])

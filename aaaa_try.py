@@ -252,14 +252,14 @@ test_ds = WikitextDataset(config, mode="test", vocabulary=train_ds.get_vocab())
 
 #text_generator = TextGenerator(config, train_ds, "the film scenario")
 #text_generator_callback = TextGeneratorCallback(text_generator)
-wandb_callback = MetricAndStatisticCallback({}, train_ds, test_ds, use_wandb=True)
+wandb_callback = MetricAndStatisticCallback(config, train_ds, test_ds, use_wandb=True)
 
 
 word_to_index = {}
 for index, word in enumerate(train_ds.get_vocab()):
     word_to_index[word] = index
 
-start_prompt = "this movie is"
+start_prompt = "was nominated"
 start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
 num_tokens_generated = 40
 text_gen_callback = TextGeneratorAAA(num_tokens_generated, start_tokens, train_ds.get_vocab(), seq_len=config["max_sequence_len"])
@@ -290,7 +290,7 @@ loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate=1e-4,
     decay_steps=1000,
-    decay_rate=0.96)
+    decay_rate=0.999)
 opt = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 model.compile(
     opt, loss=loss_fn,

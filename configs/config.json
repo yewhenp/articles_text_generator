@@ -4,15 +4,15 @@
   "epochs": 25,
   "batch_size": 32,
 
-  "vocab_size": 10000,
+  "vocab_size": 30000,
   "max_sequence_len": 64,
 
   "model": {
     "type": "tcvae",
     "config": {
-      "layers": 10,
-      "embed_dim": 512,
-      "num_heads": 12,
+      "layers": 8,
+      "embed_dim": 256,
+      "num_heads": 8,
       "feed_forward_dim": 2048
     }
   }

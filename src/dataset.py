@@ -130,11 +130,14 @@ class FilmsDataset:
             return tf.strings.regex_replace(stripped_html, f"([{string.punctuation}])", r" \1")
 
         if mode == "train":
+            # with open("vocab.json") as file:
+            #     vocab = json.load(file)
             self.vectorize_layer = TextVectorization(
                 standardize=custom_standardization,
                 max_tokens=config[ck.VOCAB_SIZE] - 1,
                 output_mode="int",
                 output_sequence_length=config[ck.MAX_SEQUENCE_LEN] + 1,
+                # vocabulary=vocab
             )
             logger.info("vectorize_layer created")
 

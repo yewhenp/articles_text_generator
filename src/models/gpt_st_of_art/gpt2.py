@@ -441,54 +441,54 @@ class Transformer(tf.keras.Model):
         )
 
 
-# class Embedding(tf.keras.layers.Layer):
-#
-#     def __init__(self, embedding_size, vocab_size, max_position_length,
-#                  trainable=True, name=None, initializer_range=0.02,
-#                  dtype=None):
-#         if dtype is None:
-#             dtype = tf.float32
-#         super().__init__(name=name, trainable=trainable, dtype=dtype)
-#         self.word_embedding = None
-#         self.position_embedding = None
-#         self.initializer_range = initializer_range
-#         self.embedding_size = embedding_size
-#         self.vocab_size = vocab_size
-#         self.max_position_length = max_position_length
-#
-#     def build(self, input_shape):
-#         self.word_embedding = self.add_weight(
-#             name="word_embedding",
-#             shape=(self.vocab_size, self.embedding_size),
-#             initializer=tf.random_normal_initializer(stddev=self.initializer_range),
-#         )
-#         self.position_embedding = self.add_weight(
-#             name="position_embedding",
-#             shape=(self.max_position_length, self.embedding_size),
-#             initializer=tf.random_normal_initializer(stddev=self.initializer_range),
-#         )
-#
-#     def call(self, inputs, start=None):
-#         """
-#         inputs: integer tensor of [batch_size, seq_length]
-#         start: start of positional embedding
-#         """
-#         shape = get_tensor_shape(inputs)
-#         x = tf.gather(self.word_embedding, inputs)
-#         if start is None:
-#             start = 0
-#         end = start + shape[1]
-#         pe = self.position_embedding[start:end]
-#         x = x + pe
-#         return x
-#
-#     def __call__(self, inputs, start=None):
-#         """
-#         if use_one_hot_keys is True, then inputs are one_hot tensors of shape [batch_size, seq_length, vocab_size],
-#         else it is an integer tensor of [batch_size, seq_length] of token ids.
-#         start: start of positional embedding
-#         """
-#         return super().__call__(inputs=inputs, start=start)
+class Embedding(tf.keras.layers.Layer):
+
+    def __init__(self, embedding_size, vocab_size, max_position_length,
+                 trainable=True, name=None, initializer_range=0.02,
+                 dtype=None):
+        if dtype is None:
+            dtype = tf.float32
+        super().__init__(name=name, trainable=trainable, dtype=dtype)
+        self.word_embedding = None
+        self.position_embedding = None
+        self.initializer_range = initializer_range
+        self.embedding_size = embedding_size
+        self.vocab_size = vocab_size
+        self.max_position_length = max_position_length
+
+    def build(self, input_shape):
+        self.word_embedding = self.add_weight(
+            name="word_embedding",
+            shape=(self.vocab_size, self.embedding_size),
+            initializer=tf.random_normal_initializer(stddev=self.initializer_range),
+        )
+        self.position_embedding = self.add_weight(
+            name="position_embedding",
+            shape=(self.max_position_length, self.embedding_size),
+            initializer=tf.random_normal_initializer(stddev=self.initializer_range),
+        )
+
+    def call(self, inputs, start=None):
+        """
+        inputs: integer tensor of [batch_size, seq_length]
+        start: start of positional embedding
+        """
+        shape = get_tensor_shape(inputs)
+        x = tf.gather(self.word_embedding, inputs)
+        if start is None:
+            start = 0
+        end = start + shape[1]
+        pe = self.position_embedding[start:end]
+        x = x + pe
+        return x
+
+    def __call__(self, inputs, start=None):
+        """
+        if use_one_hot_keys is True, then inputs are one_hot tensors of shape [batch_size, seq_length, vocab_size],
+        else it is an integer tensor of [batch_size, seq_length] of token ids.
+        start: start of positional embedding
+        """
+        return super().__call__(inputs=inputs, start=start)
 
 class TokenAndPositionEmbedding(tf.keras.layers.Layer):
     def __init__(self, maxlen, vocab_size, embed_dim):

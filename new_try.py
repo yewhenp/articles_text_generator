@@ -23,7 +23,7 @@ class TextGeneratorAAA(keras.callbacks.Callback):
     """
 
     def __init__(
-        self, max_tokens, start_tokens, index_to_word, top_k=10, print_every=1, seq_len=64
+        self, max_tokens, start_tokens, index_to_word, top_k=1, print_every=1, seq_len=64
     ):
         self.max_tokens = max_tokens
         self.start_tokens = start_tokens
@@ -50,6 +50,7 @@ class TextGeneratorAAA(keras.callbacks.Callback):
             return
         num_tokens_generated = 0
         tokens_generated = []
+        last_weights = None
         while num_tokens_generated <= self.max_tokens:
             pad_len = self.seq_len - len(start_tokens)
             sample_index = len(start_tokens) - 1
@@ -62,6 +63,7 @@ class TextGeneratorAAA(keras.callbacks.Callback):
                 x = start_tokens
             x = np.array([x])
             y = self.model.predict(x)
+            # y, last_weights = self.model(x, cache=last_weights, return_cache=True)
             sample_token = self.sample_from(y[0][sample_index])
             tokens_generated.append(sample_token)
             start_tokens.append(sample_token)
@@ -81,8 +83,8 @@ with open("configs/config_gpt_new.json") as file:
     config = json.load(file)
 
 from src.dataset import WikitextDataset, FilmsDataset
-train_ds = WikitextDataset(config)
-test_ds = WikitextDataset(config, mode="test", vocabulary=train_ds.get_vocab())
+train_ds = FilmsDataset(config)
+test_ds = FilmsDataset(config, mode="test", vocabulary=train_ds.get_vocab())
 
 wandb_callback = MetricAndStatisticCallback(config, train_ds, test_ds, use_wandb=True)
 
@@ -95,21 +97,33 @@ start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
 num_tokens_generated = 40
 text_gen_callback = TextGeneratorAAA(num_tokens_generated, start_tokens, train_ds.get_vocab(), seq_len=config["max_sequence_len"])
 
-model = TCVAE2(config)
+import os
+checkpoint_path = "training_films_finetune/cp.ckpt"
+checkpoint_dir = os.path.dirname(checkpoint_path)
+
+# Create a callback that saves the model's weights
+cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                 save_weights_only=True,
+                                                 verbose=1)
+
+
+model = GPT2(config)
 
 model(next(iter(train_ds.get_dataset()))[0])
+model.load_weights(config["weights_path"])
+
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate=1e-4,
-    decay_steps=1000,
-    decay_rate=0.999)
-opt = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+    decay_steps=10000,
+    decay_rate=0.99)
+opt = tf.keras.optimizers.Adam(learning_rate=1e-4)
 model.compile(
     opt, loss=loss_fn,
 )  # No loss and optimization based on word embeddings from transformer block
 
 model.summary()
 
-model.fit(train_ds.get_dataset(), epochs=25, callbacks=[text_gen_callback, wandb_callback], validation_data=test_ds.get_dataset())
+model.fit(train_ds.get_dataset(), epochs=25, callbacks=[text_gen_callback, wandb_callback, cp_callback], validation_data=test_ds.get_dataset())
 
 

@@ -11,10 +11,11 @@
     "type": "tcvae",
     "config": {
       "layers": 8,
-      "embed_dim": 512,
+      "embed_dim": 256,
       "num_heads": 8,
-      "dff": 2048
+      "dff": 1024
     }
-  }
+  },
 
+  "weights_path": "weights_final_all/training_gpt_1/cp.ckpt"
 }

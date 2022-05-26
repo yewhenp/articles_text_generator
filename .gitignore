@@ -5,3 +5,4 @@ wandb/
 vocab*.json
 aclImdb*
 *.zip
+*output.txt

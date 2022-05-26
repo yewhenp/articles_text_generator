@@ -5,6 +5,7 @@ from tensorflow import keras
 import numpy as np
 
 from src.models.gpt_st_of_art.gpt2 import GPT2
+from src.models.gpt_st_of_art.tcvae import TCVAE2
 
 
 class TextGeneratorAAA(keras.callbacks.Callback):
@@ -80,21 +81,21 @@ with open("configs/config_gpt_new.json") as file:
     config = json.load(file)
 
 from src.dataset import WikitextDataset, FilmsDataset
-train_ds = FilmsDataset(config)
-test_ds = FilmsDataset(config, mode="test", vocabulary=train_ds.get_vocab())
+train_ds = WikitextDataset(config)
+test_ds = WikitextDataset(config, mode="test", vocabulary=train_ds.get_vocab())
 
-wandb_callback = MetricAndStatisticCallback(config, train_ds, test_ds, use_wandb=False)
+wandb_callback = MetricAndStatisticCallback(config, train_ds, test_ds, use_wandb=True)
 
 word_to_index = {}
 for index, word in enumerate(train_ds.get_vocab()):
     word_to_index[word] = index
 
-start_prompt = "thr film was"
+start_prompt = "the film was"
 start_tokens = [word_to_index.get(_, 1) for _ in start_prompt.split()]
 num_tokens_generated = 40
 text_gen_callback = TextGeneratorAAA(num_tokens_generated, start_tokens, train_ds.get_vocab(), seq_len=config["max_sequence_len"])
 
-model = GPT2(config)
+model = TCVAE2(config)
 
 model(next(iter(train_ds.get_dataset()))[0])
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)

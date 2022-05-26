@@ -10,9 +10,10 @@
   "model": {
     "type": "tcvae",
     "config": {
-      "layers": 12,
-      "embed_dim": 768,
-      "num_heads": 12
+      "layers": 8,
+      "embed_dim": 512,
+      "num_heads": 8,
+      "dff": 2048
     }
   }
 
